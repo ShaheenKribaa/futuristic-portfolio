@@ -1,14 +1,14 @@
-import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { AnalyticsProvider } from "@/components/providers/analytics-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Kribaa Chahine | Full-stack Engineer & AI Enthusiast",
-  description: "Portfolio of Kribaa Chahine, a Full-stack Engineer and AI Enthusiast specializing in rapid development and modern tech stacks.",
+  title: "Futuristic Portfolio",
+  description: "A modern portfolio showcasing my work and skills",
   keywords: ["Full-stack Engineer", "AI Enthusiast", "Web Developer", "System Architect", "Portfolio"],
   authors: [{ name: "Kribaa Chahine" }],
   creator: "Kribaa Chahine",
@@ -71,7 +71,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <AnalyticsProvider>{children}</AnalyticsProvider>
         </ThemeProvider>
       </body>
     </html>
