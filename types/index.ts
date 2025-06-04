@@ -3,10 +3,10 @@ export interface Experience {
   title: string
   company: string
   location: string
-  startDate: string
-  endDate: string
-  description: string[]
-  type: "work" | "education" | "certification"
+  period: string
+  description: string
+  link: string
+  technologies: string[]
 }
 
 export interface Skill {

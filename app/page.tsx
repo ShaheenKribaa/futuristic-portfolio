@@ -113,21 +113,30 @@ export default function Portfolio() {
   const [skills, setSkills] = useState<Skill[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const loadData = async () => {
       try {
+        setIsLoading(true)
+        setError(null)
+
         const [experiencesData, skillsData, projectsData] = await Promise.all([
           getExperiences(),
           getSkills(),
           ProjectController.getFeaturedProjects(),
         ])
 
+        if (!experiencesData || !skillsData || !projectsData) {
+          throw new Error("Failed to load data")
+        }
+
         setExperiences(experiencesData)
         setSkills(skillsData)
         setProjects(projectsData)
       } catch (error) {
         console.error("Error loading data:", error)
+        setError("Failed to load portfolio data. Please try refreshing the page.")
       } finally {
         setIsLoading(false)
       }
@@ -138,6 +147,22 @@ export default function Portfolio() {
 
   if (isLoading) {
     return <LoadingSpinner />
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-red-400">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-cyan-400 text-black rounded-lg hover:bg-cyan-500 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -166,38 +191,44 @@ export default function Portfolio() {
             <HeroSection personalInfo={personalInfo} />
           </motion.section>
 
-          <motion.section
-            id="timeline"
-            initial={{ opacity: 0, y: 100 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            aria-label="Experience timeline"
-          >
-            <TimelineSection experiences={experiences} />
-          </motion.section>
+          {experiences.length > 0 && (
+            <motion.section
+              id="timeline"
+              initial={{ opacity: 0, y: 100 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.8 }}
+              aria-label="Experience timeline"
+            >
+              <TimelineSection experiences={experiences} />
+            </motion.section>
+          )}
 
-          <motion.section
-            id="skills"
-            initial={{ opacity: 0, y: 100 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            aria-label="Skills and expertise"
-          >
-            <SkillsSection skills={skills} />
-          </motion.section>
+          {skills.length > 0 && (
+            <motion.section
+              id="skills"
+              initial={{ opacity: 0, y: 100 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.8 }}
+              aria-label="Skills and expertise"
+            >
+              <SkillsSection skills={skills} />
+            </motion.section>
+          )}
 
-          <motion.section
-            id="projects"
-            initial={{ opacity: 0, y: 100 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            aria-label="Featured projects"
-          >
-            <ProjectsSection projects={projects} />
-          </motion.section>
+          {projects.length > 0 && (
+            <motion.section
+              id="projects"
+              initial={{ opacity: 0, y: 100 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.8 }}
+              aria-label="Featured projects"
+            >
+              <ProjectsSection projects={projects} />
+            </motion.section>
+          )}
 
           <motion.section
             id="future"

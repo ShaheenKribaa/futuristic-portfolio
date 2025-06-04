@@ -79,7 +79,7 @@ export function FloatingChatbot() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -91,12 +91,14 @@ export function FloatingChatbot() {
           >
             <Card
               className={`bg-gray-900/95 border-cyan-400 shadow-2xl shadow-cyan-400/20 backdrop-blur-sm flex flex-col transition-all duration-300 ${
-                isMinimized ? "w-80 h-16" : "w-96 h-[500px]"
+                isMinimized 
+                  ? "w-64 sm:w-80 h-16" 
+                  : "w-[calc(100vw-2rem)] sm:w-96 h-[calc(100vh-8rem)] sm:h-[500px]"
               }`}
             >
               <CardHeader className="pb-2 border-b border-gray-700 flex-shrink-0">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-cyan-400 flex items-center gap-2 font-mono">
+                  <CardTitle className="text-cyan-400 flex items-center gap-2 font-mono text-sm sm:text-base">
                     <motion.div
                       animate={{
                         scale: [1, 1.2, 1],
@@ -110,6 +112,7 @@ export function FloatingChatbot() {
                     />
                     Kribaa's AI Assistant
                   </CardTitle>
+                  
                   <div className="flex items-center gap-2">
                     <motion.button
                       whileHover={{ scale: 1.1 }}
@@ -131,113 +134,111 @@ export function FloatingChatbot() {
                 </div>
               </CardHeader>
 
-              <AnimatePresence>
-                {!isMinimized && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="flex-1 flex flex-col overflow-hidden"
-                  >
-                    <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden p-4">
-                      <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-                        <AnimatePresence>
-                          {messages.map((message, index) => (
-                            <motion.div
-                              key={message.id}
-                              initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: -20, scale: 0.8 }}
-                              transition={{ duration: 0.3, delay: index * 0.1 }}
-                              className={`p-3 rounded-lg text-sm ${
-                                message.role === "user"
-                                  ? "bg-cyan-600/20 border border-cyan-400/30 ml-8 text-cyan-100"
-                                  : "bg-gray-800/50 border border-gray-600/30 mr-8 text-gray-300"
-                              }`}
-                            >
-                              <div className="text-xs opacity-70 mb-1 font-mono">
-                                {message.role === "user" ? "USER" : "AI_ASSISTANT"}
-                              </div>
-                              {message.content}
-                            </motion.div>
-                          ))}
-                        </AnimatePresence>
-
-                        {isTyping && (
+              {!isMinimized && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="flex-1 flex flex-col overflow-hidden"
+                >
+                  <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden p-2 sm:p-4">
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                      <AnimatePresence>
+                        {messages.map((message, index) => (
                           <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-gray-800/50 border border-gray-600/30 mr-8 p-3 rounded-lg text-sm"
+                            key={message.id}
+                            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -20, scale: 0.8 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                            className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
+                              message.role === "user"
+                                ? "bg-cyan-600/20 border border-cyan-400/30 ml-4 sm:ml-8 text-cyan-100"
+                                : "bg-gray-800/50 border border-gray-600/30 mr-4 sm:mr-8 text-gray-300"
+                            }`}
                           >
-                            <div className="text-xs opacity-70 mb-1 font-mono">AI_ASSISTANT</div>
-                            <div className="flex items-center space-x-1">
-                              {[0, 1, 2].map((i) => (
-                                <motion.div
-                                  key={i}
-                                  className="w-2 h-2 bg-cyan-400 rounded-full"
-                                  animate={{
-                                    scale: [1, 1.5, 1],
-                                    opacity: [0.5, 1, 0.5],
-                                  }}
-                                  transition={{
-                                    duration: 1,
-                                    repeat: Number.POSITIVE_INFINITY,
-                                    delay: i * 0.2,
-                                  }}
-                                />
-                              ))}
-                              <span className="ml-2 text-gray-400 font-mono text-xs">Processing...</span>
+                            <div className="text-[10px] sm:text-xs opacity-70 mb-1 font-mono">
+                              {message.role === "user" ? "USER" : "AI_ASSISTANT"}
                             </div>
+                            {message.content}
                           </motion.div>
-                        )}
-                        <div ref={messagesEndRef} />
-                      </div>
+                        ))}
+                      </AnimatePresence>
 
-                      {messages.length === 1 && !isTyping && (
+                      {isTyping && (
                         <motion.div
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="space-y-2"
+                          className="bg-gray-800/50 border border-gray-600/30 mr-4 sm:mr-8 p-2 sm:p-3 rounded-lg text-xs sm:text-sm"
                         >
-                          <p className="text-xs text-gray-400 font-mono">SUGGESTED_QUERIES:</p>
-                          {suggestedQuestions.slice(0, 2).map((question, index) => (
-                            <motion.button
-                              key={index}
-                              onClick={() => handleSuggestedQuestion(question)}
-                              className="text-xs text-cyan-400 hover:text-cyan-300 block text-left w-full p-2 bg-gray-800/30 rounded border border-gray-700 hover:border-cyan-400/50 transition-colors font-mono"
-                              whileHover={{ scale: 1.02, x: 5 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              {">"} {question}
-                            </motion.button>
-                          ))}
+                          <div className="text-[10px] sm:text-xs opacity-70 mb-1 font-mono">AI_ASSISTANT</div>
+                          <div className="flex items-center space-x-1">
+                            {[0, 1, 2].map((i) => (
+                              <motion.div
+                                key={i}
+                                className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-cyan-400 rounded-full"
+                                animate={{
+                                  scale: [1, 1.5, 1],
+                                  opacity: [0.5, 1, 0.5],
+                                }}
+                                transition={{
+                                  duration: 1,
+                                  repeat: Number.POSITIVE_INFINITY,
+                                  delay: i * 0.2,
+                                }}
+                              />
+                            ))}
+                            <span className="ml-2 text-gray-400 font-mono text-[10px] sm:text-xs">Processing...</span>
+                          </div>
                         </motion.div>
                       )}
+                      <div ref={messagesEndRef} />
+                    </div>
 
-                      <div className="flex gap-2 flex-shrink-0">
-                        <Input
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                          placeholder="Ask me anything..."
-                          className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-cyan-400 font-mono text-sm"
-                          disabled={isLoading}
-                        />
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button
-                            size="sm"
-                            onClick={handleSendMessage}
-                            disabled={isLoading || !input.trim()}
-                            className="bg-cyan-500 hover:bg-cyan-600 text-black"
+                    {messages.length === 1 && !isTyping && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-2"
+                      >
+                        <p className="text-[10px] sm:text-xs text-gray-400 font-mono">SUGGESTED_QUERIES:</p>
+                        {suggestedQuestions.slice(0, 2).map((question, index) => (
+                          <motion.button
+                            key={index}
+                            onClick={() => handleSuggestedQuestion(question)}
+                            className="text-[10px] sm:text-xs text-cyan-400 hover:text-cyan-300 block text-left w-full p-1.5 sm:p-2 bg-gray-800/30 rounded border border-gray-700 hover:border-cyan-400/50 transition-colors font-mono"
+                            whileHover={{ scale: 1.02, x: 5 }}
+                            whileTap={{ scale: 0.98 }}
                           >
-                            <Send className="w-4 h-4" />
-                          </Button>
-                        </motion.div>
-                      </div>
-                    </CardContent>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                            {">"} {question}
+                          </motion.button>
+                        ))}
+                      </motion.div>
+                    )}
+
+                    <div className="flex gap-2 flex-shrink-0">
+                      <Input
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                        placeholder="Ask me anything..."
+                        className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-cyan-400 font-mono text-xs sm:text-sm"
+                        disabled={isLoading}
+                      />
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button
+                          size="sm"
+                          onClick={handleSendMessage}
+                          disabled={isLoading || !input.trim()}
+                          className="bg-cyan-500 hover:bg-cyan-600 text-black"
+                        >
+                          <Send className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </Button>
+                      </motion.div>
+                    </div>
+                  </CardContent>
+                </motion.div>
+              )}
             </Card>
           </motion.div>
         )}
@@ -260,11 +261,11 @@ export function FloatingChatbot() {
       >
         <Button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-16 h-16 rounded-full bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 border-2 border-cyan-400 shadow-2xl transition-all duration-300 relative overflow-hidden"
+          className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 border-2 border-cyan-400 shadow-2xl transition-all duration-300 relative overflow-hidden"
         >
           {/* Orb Core */}
           <div className="relative z-10">
-            <MessageCircle className="w-7 h-7" />
+            <MessageCircle className="w-5 h-5 sm:w-7 sm:h-7" />
           </div>
 
           {/* Holographic rings */}
@@ -280,7 +281,7 @@ export function FloatingChatbot() {
           />
 
           {/* Energy particles */}
-          {Array.from({ length: 4 }).map((_, i) => (
+          {[...Array(3)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 bg-cyan-400 rounded-full"
@@ -303,11 +304,11 @@ export function FloatingChatbot() {
           {/* Pulse indicator */}
           {!isOpen && (
             <motion.div
-              className="absolute -top-1 -right-1 w-4 h-4 bg-red-400 rounded-full flex items-center justify-center"
+              className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-red-400 rounded-full flex items-center justify-center"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
             >
-              <Zap className="w-2 h-2 text-white" />
+              <Zap className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-white" />
             </motion.div>
           )}
         </Button>

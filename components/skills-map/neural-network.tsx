@@ -42,12 +42,12 @@ export function NeuralNetwork({ skills, onNodeClick, selectedSkill }: NeuralNetw
     const rect = canvas.getBoundingClientRect()
     const centerX = rect.width / 2
     const centerY = rect.height / 2
-    const radius = Math.min(rect.width, rect.height) * 0.35
+    const radius = Math.min(rect.width, rect.height) * (window.innerWidth < 768 ? 0.25 : 0.35)
 
     // Create nodes in a circular layout
     const newNodes: Node[] = skills.map((skill, index) => {
       const angle = (index / skills.length) * 2 * Math.PI
-      const nodeRadius = radius + (Math.random() - 0.5) * 50
+      const nodeRadius = radius + (Math.random() - 0.5) * (window.innerWidth < 768 ? 30 : 50)
 
       return {
         id: skill.id,
@@ -237,9 +237,53 @@ export function NeuralNetwork({ skills, onNodeClick, selectedSkill }: NeuralNetw
     }
   }
 
+  // Handle touch interactions
+  const handleTouchStart = (event: React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const touch = event.touches[0]
+    const rect = canvas.getBoundingClientRect()
+    const touchX = touch.clientX - rect.left
+    const touchY = touch.clientY - rect.top
+
+    const touchedNode = nodes.find((node) => {
+      const distance = Math.sqrt((touchX - node.x) ** 2 + (touchY - node.y) ** 2)
+      return distance < 20 // Larger touch target for mobile
+    })
+
+    if (touchedNode) {
+      setHoveredNode(touchedNode.id)
+      if (onNodeClick) {
+        onNodeClick(touchedNode.id)
+      }
+    }
+  }
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const touch = event.touches[0]
+    const rect = canvas.getBoundingClientRect()
+    const touchX = touch.clientX - rect.left
+    const touchY = touch.clientY - rect.top
+
+    const touchedNode = nodes.find((node) => {
+      const distance = Math.sqrt((touchX - node.x) ** 2 + (touchY - node.y) ** 2)
+      return distance < 20
+    })
+
+    setHoveredNode(touchedNode?.id || null)
+  }
+
+  const handleTouchEnd = () => {
+    setHoveredNode(null)
+  }
+
   return (
     <motion.div
-      className="relative w-full h-96 bg-gray-900/30 rounded-lg border border-gray-700 overflow-hidden"
+      className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] bg-gray-900/30 rounded-lg border border-gray-700 overflow-hidden"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.8 }}
@@ -251,18 +295,23 @@ export function NeuralNetwork({ skills, onNodeClick, selectedSkill }: NeuralNetw
         className="w-full h-full"
         onMouseMove={handleMouseMove}
         onClick={handleClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       />
 
       {/* Network status overlay */}
-      <div className="absolute top-4 left-4 text-xs text-cyan-400 font-mono">NEURAL NETWORK ACTIVE</div>
-      <div className="absolute top-4 right-4 text-xs text-gray-400 font-mono">
+      <div className="absolute top-2 sm:top-4 left-2 sm:left-4 text-[10px] sm:text-xs text-cyan-400 font-mono">
+        NEURAL NETWORK ACTIVE
+      </div>
+      <div className="absolute top-2 sm:top-4 right-2 sm:right-4 text-[10px] sm:text-xs text-gray-400 font-mono">
         NODES: {nodes.length} | CONNECTIONS: {connections.length}
       </div>
 
       {/* Hover tooltip */}
       {hoveredNode && (
         <motion.div
-          className="absolute bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-mono border border-cyan-400/50 pointer-events-none z-10"
+          className="absolute bg-gray-800 text-white px-2 sm:px-3 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-mono border border-cyan-400/50 pointer-events-none z-10"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           style={{

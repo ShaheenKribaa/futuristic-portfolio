@@ -1,150 +1,131 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import type { Experience } from "@/types"
-import { Briefcase, GraduationCap, Award } from "lucide-react"
+import { Briefcase, Calendar, Link, MapPin, ArrowRight } from "lucide-react"
+
+interface Experience {
+  id: string
+  title: string
+  company: string
+  location: string
+  period: string
+  description: string
+  link: string
+  technologies: string[]
+}
 
 interface TimelineSectionProps {
   experiences: Experience[]
 }
 
 export function TimelineSection({ experiences }: TimelineSectionProps) {
-  const getIcon = (type: Experience["type"]) => {
-    switch (type) {
-      case "work":
-        return <Briefcase className="w-4 h-4" />
-      case "education":
-        return <GraduationCap className="w-4 h-4" />
-      case "certification":
-        return <Award className="w-4 h-4" />
-      default:
-        return <Briefcase className="w-4 h-4" />
-    }
-  }
-
-  const getTypeColor = (type: Experience["type"]) => {
-    switch (type) {
-      case "work":
-        return "border-cyan-400 text-cyan-400"
-      case "education":
-        return "border-purple-400 text-purple-400"
-      case "certification":
-        return "border-green-400 text-green-400"
-      default:
-        return "border-cyan-400 text-cyan-400"
-    }
-  }
-
   return (
-    <section className="relative z-10 py-20 px-4">
-      <div className="max-w-4xl mx-auto">
-        <motion.h2
-          className="text-4xl md:text-5xl font-bold text-center mb-16 bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent"
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        >
-          Professional Journey
-        </motion.h2>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <motion.div
+        className="text-center mb-8 sm:mb-12"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+      >
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+          Experience Timeline
+        </h2>
+        <p className="text-base sm:text-lg text-gray-400">My professional journey through time</p>
+      </motion.div>
 
-        <div className="relative">
-          {/* Central timeline line */}
-          <motion.div
-            className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-cyan-400 to-purple-600 rounded-full"
-            initial={{ scaleY: 0 }}
-            whileInView={{ scaleY: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
-            style={{ originY: 0 }}
-          />
+      <div className="relative">
+        {/* Timeline line */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-gradient-to-b from-cyan-400 via-purple-400 to-pink-400 hidden sm:block" />
 
+        {/* Timeline items */}
+        <div className="space-y-6 sm:space-y-8">
           {experiences.map((experience, index) => (
             <motion.div
               key={experience.id}
-              className={`relative flex items-center mb-12 ${index % 2 === 0 ? "" : "flex-row-reverse"}`}
-              initial={{ opacity: 0, x: index % 2 === 0 ? -100 : 100 }}
+              initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: index * 0.2 }}
+              className="relative flex flex-col sm:flex-row items-center"
             >
-              <div className={`w-1/2 ${index % 2 === 0 ? "pr-8 text-right" : "pl-8 order-2"}`}>
-                <motion.div whileHover={{ scale: 1.02, y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
-                  <Card className="bg-gray-900/50 border-gray-700 hover:border-cyan-400 transition-all duration-300 backdrop-blur-sm group">
-                    <CardHeader>
-                      <div className="flex items-center gap-2 mb-2">
-                        <motion.div whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 400 }}>
-                          <Badge variant="outline" className={getTypeColor(experience.type)}>
-                            {experience.startDate} - {experience.endDate}
-                          </Badge>
-                        </motion.div>
-                      </div>
-                      <CardTitle className="text-white group-hover:text-cyan-400 transition-colors duration-300">
-                        {experience.title}
-                      </CardTitle>
-                      <CardDescription className="text-purple-400">
-                        {experience.company} • {experience.location}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <motion.ul
-                        className="text-gray-300 space-y-1"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
-                      >
-                        {experience.description.map((item, idx) => (
-                          <motion.li
-                            key={idx}
-                            className="text-sm"
-                            initial={{ opacity: 0, x: -20 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.3, delay: idx * 0.1 }}
-                          >
-                            • {item}
-                          </motion.li>
-                        ))}
-                      </motion.ul>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </div>
-
-              {/* Timeline node */}
-              <motion.div
-                className="absolute left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full flex items-center justify-center shadow-lg z-10"
-                initial={{ scale: 0 }}
-                whileInView={{ scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.2 + 0.3 }}
-                whileHover={{ scale: 1.2 }}
-              >
-                <motion.div className="text-black" whileHover={{ rotate: 360 }} transition={{ duration: 0.5 }}>
-                  {getIcon(experience.type)}
-                </motion.div>
-
-                {/* Pulse effect */}
+              {/* Timeline dot */}
+              <div className="absolute left-1/2 transform -translate-x-1/2 w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-cyan-400 z-10 hidden sm:block">
                 <motion.div
-                  className="absolute inset-0 bg-cyan-400 rounded-full"
+                  className="absolute inset-0 rounded-full bg-cyan-400"
                   animate={{
                     scale: [1, 1.5, 1],
-                    opacity: [0.5, 0, 0.5],
+                    opacity: [0.5, 0.2, 0.5],
                   }}
                   transition={{
                     duration: 2,
                     repeat: Number.POSITIVE_INFINITY,
-                    delay: index * 0.5,
+                    ease: "easeInOut",
                   }}
                 />
-              </motion.div>
+              </div>
+
+              {/* Content */}
+              <div className="w-full sm:w-1/2 sm:pl-8 sm:pr-8">
+                <motion.div
+                  className="bg-black/50 backdrop-blur-sm border border-gray-800 rounded-lg p-4 sm:p-6 hover:border-cyan-400/50 transition-colors group"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
+                    <div>
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-white group-hover:text-cyan-400 transition-colors">
+                        {experience.title}
+                      </h3>
+                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-cyan-400 mt-1">
+                        <Briefcase className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span>{experience.company}</span>
+                      </div>
+                    </div>
+                    <a
+                      href={experience.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center space-x-2 text-xs sm:text-sm text-gray-400 hover:text-cyan-400 transition-colors group/link mt-2 sm:mt-0"
+                    >
+                      <span>Visit Website</span>
+                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 transform group-hover/link:translate-x-1 transition-transform" />
+                    </a>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 sm:gap-4 mb-3 sm:mb-4">
+                    <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-400">
+                      <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span>{experience.location}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-400">
+                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span>{experience.period}</span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs sm:text-sm md:text-base text-gray-300 mb-3 sm:mb-4 leading-relaxed">
+                    {experience.description}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    {experience.technologies.map((tech) => (
+                      <motion.span
+                        key={tech}
+                        className="px-2 sm:px-3 py-1 sm:py-1.5 bg-cyan-400/20 text-cyan-400 rounded-full text-[10px] sm:text-xs md:text-sm"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {tech}
+                      </motion.span>
+                    ))}
+                  </div>
+                </motion.div>
+              </div>
             </motion.div>
           ))}
         </div>
       </div>
-    </section>
+    </div>
   )
 }
