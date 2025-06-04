@@ -3,21 +3,50 @@ interface PageView {
   timestamp: number
   userAgent: string
   referrer: string
+  sessionId: string
+  ip?: string
+  country?: string
+  city?: string
+  browser: string
+  os: string
+  deviceType: string
+  screenSize: {
+    width: number
+    height: number
+  }
 }
 
 interface AnalyticsEvent {
   name: string
   data: Record<string, any>
   timestamp: number
+  sessionId: string
+  path: string
+}
+
+interface HeatmapData {
+  x: number
+  y: number
+  value: number
+  timestamp: number
+  path: string
+  type: "click" | "hover" | "scroll"
 }
 
 class Analytics {
   private static instance: Analytics
   private pageViews: PageView[] = []
   private events: AnalyticsEvent[] = []
+  private heatmapData: HeatmapData[] = []
+  private sessionStart: number
+  private currentSessionId: string
 
   private constructor() {
-    this.loadData()
+    this.sessionStart = Date.now()
+    this.currentSessionId = this.generateSessionId()
+    if (typeof window !== 'undefined') {
+      this.loadData()
+    }
   }
 
   public static getInstance(): Analytics {
@@ -27,13 +56,60 @@ class Analytics {
     return Analytics.instance
   }
 
-  public trackPageView(path: string) {
+  private generateSessionId(): string {
+    return Math.random().toString(36).substring(2) + Date.now().toString(36)
+  }
+
+  private getBrowserInfo(): { browser: string; os: string } {
+    const ua = navigator.userAgent
+    let browser = "Unknown"
+    let os = "Unknown"
+
+    // Browser detection
+    if (ua.includes("Chrome")) browser = "Chrome"
+    else if (ua.includes("Firefox")) browser = "Firefox"
+    else if (ua.includes("Safari")) browser = "Safari"
+    else if (ua.includes("Edge")) browser = "Edge"
+    else if (ua.includes("MSIE") || ua.includes("Trident/")) browser = "Internet Explorer"
+
+    // OS detection
+    if (ua.includes("Windows")) os = "Windows"
+    else if (ua.includes("Mac")) os = "MacOS"
+    else if (ua.includes("Linux")) os = "Linux"
+    else if (ua.includes("Android")) os = "Android"
+    else if (ua.includes("iOS")) os = "iOS"
+
+    return { browser, os }
+  }
+
+  public async trackPageView(path: string) {
+    const { browser, os } = this.getBrowserInfo()
     const pageView: PageView = {
       path,
       timestamp: Date.now(),
       userAgent: navigator.userAgent,
       referrer: document.referrer,
+      sessionId: this.currentSessionId,
+      browser,
+      os,
+      deviceType: this.getDeviceType(navigator.userAgent),
+      screenSize: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      },
     }
+
+    // Try to get geolocation data
+    try {
+      const response = await fetch("https://ipapi.co/json/")
+      const data = await response.json()
+      pageView.ip = data.ip
+      pageView.country = data.country_name
+      pageView.city = data.city
+    } catch (error) {
+      console.error("Error fetching geolocation:", error)
+    }
+
     this.pageViews.push(pageView)
     this.saveData()
   }
@@ -43,29 +119,42 @@ class Analytics {
       name,
       data,
       timestamp: Date.now(),
+      sessionId: this.currentSessionId,
+      path: window.location.pathname,
     }
     this.events.push(event)
     this.saveData()
   }
 
-  private saveData() {
-    try {
-      localStorage.setItem("analytics_page_views", JSON.stringify(this.pageViews))
-      localStorage.setItem("analytics_events", JSON.stringify(this.events))
-    } catch (error) {
-      console.error("Error saving analytics data:", error)
+  public trackHeatmap(x: number, y: number, type: "click" | "hover" | "scroll", value: number = 1) {
+    const heatmapPoint: HeatmapData = {
+      x,
+      y,
+      value,
+      timestamp: Date.now(),
+      path: window.location.pathname,
+      type,
     }
+    this.heatmapData.push(heatmapPoint)
+    this.saveData()
+  }
+
+  private saveData() {
+    if (typeof window === 'undefined') return
+    localStorage.setItem('analytics_pageViews', JSON.stringify(this.pageViews))
+    localStorage.setItem('analytics_events', JSON.stringify(this.events))
+    localStorage.setItem('analytics_heatmapData', JSON.stringify(this.heatmapData))
   }
 
   private loadData() {
-    try {
-      const pageViews = localStorage.getItem("analytics_page_views")
-      const events = localStorage.getItem("analytics_events")
-      if (pageViews) this.pageViews = JSON.parse(pageViews)
-      if (events) this.events = JSON.parse(events)
-    } catch (error) {
-      console.error("Error loading analytics data:", error)
-    }
+    if (typeof window === 'undefined') return
+    const pageViews = localStorage.getItem('analytics_pageViews')
+    const events = localStorage.getItem('analytics_events')
+    const heatmapData = localStorage.getItem('analytics_heatmapData')
+
+    if (pageViews) this.pageViews = JSON.parse(pageViews)
+    if (events) this.events = JSON.parse(events)
+    if (heatmapData) this.heatmapData = JSON.parse(heatmapData)
   }
 
   private getDeviceType(userAgent: string): string {
@@ -117,15 +206,44 @@ class Analytics {
     return (singlePageVisits / this.pageViews.length) * 100
   }
 
+  private getReturningVisitors(): { unique: number; returning: number } {
+    const visitorSessions = new Map<string, number>()
+    this.pageViews.forEach((view) => {
+      const count = visitorSessions.get(view.sessionId) || 0
+      visitorSessions.set(view.sessionId, count + 1)
+    })
+
+    let unique = 0
+    let returning = 0
+    visitorSessions.forEach((count) => {
+      if (count === 1) unique++
+      else returning++
+    })
+
+    return { unique, returning }
+  }
+
+  private getGeolocationData() {
+    const locations = this.pageViews.reduce((acc, view) => {
+      if (view.country) {
+        acc[view.country] = (acc[view.country] || 0) + 1
+      }
+      return acc
+    }, {} as Record<string, number>)
+
+    return Object.entries(locations).map(([country, count]) => ({
+      country,
+      visitors: count,
+    }))
+  }
+
   public getAnalyticsData() {
-    const uniqueVisitors = new Set(
-      this.pageViews.map((view) => view.userAgent)
-    ).size
+    const { unique, returning } = this.getReturningVisitors()
+    const uniqueVisitors = unique + returning
 
     const deviceTypes = Object.entries(
       this.pageViews.reduce((acc, view) => {
-        const type = this.getDeviceType(view.userAgent)
-        acc[type] = (acc[type] || 0) + 1
+        acc[view.deviceType] = (acc[view.deviceType] || 0) + 1
         return acc
       }, {} as Record<string, number>)
     ).map(([type, count]) => ({
@@ -154,16 +272,30 @@ class Analytics {
       .sort((a, b) => b.views - a.views)
       .slice(0, 5)
 
+    const browserStats = Object.entries(
+      this.pageViews.reduce((acc, view) => {
+        acc[view.browser] = (acc[view.browser] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+    ).map(([browser, count]) => ({
+      browser,
+      percentage: Math.round((count / this.pageViews.length) * 100),
+    }))
+
     return {
       totalVisits: this.pageViews.length,
       uniqueVisitors,
+      returningVisitors: returning,
       averageTimeOnSite: this.getAverageTimeOnSite(),
       bounceRate: this.getBounceRate(),
       pageViews: this.pageViews.length,
       topPages,
       trafficSources,
       deviceTypes,
+      browserStats,
       dailyVisits: this.getDailyVisits(7),
+      geolocation: this.getGeolocationData(),
+      heatmapData: this.heatmapData,
     }
   }
 }
