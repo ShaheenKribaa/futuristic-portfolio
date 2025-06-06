@@ -7,7 +7,7 @@ import { AnalyticsProvider } from "@/components/providers/analytics-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Futuristic Portfolio",
+  title: "Chahine Kribaa",
   description: "A modern portfolio showcasing my work and skills",
   keywords: ["Full-stack Engineer", "AI Enthusiast", "Web Developer", "System Architect", "Portfolio"],
   authors: [{ name: "Kribaa Chahine" }],
