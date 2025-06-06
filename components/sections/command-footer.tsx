@@ -30,13 +30,13 @@ export function CommandFooter() {
   const socialLinks = [
     {
       icon: <Github className="w-5 h-5" />,
-      href: "https://github.com/kribaa",
+      href: "https://github.com/ShaheenKribaa",
       label: "GitHub",
       color: "hover:text-white hover:border-white",
     },
     {
       icon: <Linkedin className="w-5 h-5" />,
-      href: "https://linkedin.com/in/kribaa",
+      href: "https://www.linkedin.com/in/chahinekribaa/",
       label: "LinkedIn",
       color: "hover:text-blue-400 hover:border-blue-400",
     },
