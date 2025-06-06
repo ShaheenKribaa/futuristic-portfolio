@@ -194,10 +194,10 @@ export default function Portfolio() {
           {experiences.length > 0 && (
             <motion.section
               id="timeline"
-              initial={{ opacity: 0, y: 100 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.5 }}
               aria-label="Experience timeline"
             >
               <TimelineSection experiences={experiences} />
@@ -207,10 +207,10 @@ export default function Portfolio() {
           {skills.length > 0 && (
             <motion.section
               id="skills"
-              initial={{ opacity: 0, y: 100 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.5 }}
               aria-label="Skills and expertise"
             >
               <SkillsSection skills={skills} />
@@ -220,10 +220,10 @@ export default function Portfolio() {
           {projects.length > 0 && (
             <motion.section
               id="projects"
-              initial={{ opacity: 0, y: 100 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.5 }}
               aria-label="Featured projects"
             >
               <ProjectsSection projects={projects} />
@@ -232,10 +232,10 @@ export default function Portfolio() {
 
           <motion.section
             id="future"
-            initial={{ opacity: 0, y: 100 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.5 }}
             aria-label="Future vision"
           >
             <FutureModule />
@@ -243,10 +243,10 @@ export default function Portfolio() {
 
           <motion.section
             id="footer"
-            initial={{ opacity: 0, y: 100 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.5 }}
             aria-label="Contact and footer"
           >
             <CommandFooter />

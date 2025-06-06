@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronUp } from "lucide-react"
 import { Button } from "./button"
@@ -8,17 +8,35 @@ import { Button } from "./button"
 export function ProgressIndicator() {
   const [scrollProgress, setScrollProgress] = useState(0)
   const [showBackToTop, setShowBackToTop] = useState(false)
+  const rafRef = useRef<number>()
+  const lastScrollY = useRef(0)
 
   useEffect(() => {
     const handleScroll = () => {
-      const totalScroll = document.documentElement.scrollHeight - window.innerHeight
-      const currentProgress = (window.scrollY / totalScroll) * 100
-      setScrollProgress(currentProgress)
-      setShowBackToTop(window.scrollY > window.innerHeight / 2)
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+      }
+
+      rafRef.current = requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY
+        // Only update if scroll position changed significantly
+        if (Math.abs(currentScrollY - lastScrollY.current) > 5) {
+          const totalScroll = document.documentElement.scrollHeight - window.innerHeight
+          const currentProgress = (currentScrollY / totalScroll) * 100
+          setScrollProgress(currentProgress)
+          setShowBackToTop(currentScrollY > window.innerHeight / 2)
+          lastScrollY.current = currentScrollY
+        }
+      })
     }
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+      }
+    }
   }, [])
 
   const scrollToTop = () => {

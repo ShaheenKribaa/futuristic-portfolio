@@ -7,8 +7,8 @@ export function AnimatedBackground() {
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; delay: number }>>([])
 
   useEffect(() => {
-    // Generate matrix rain particles
-    const newParticles = Array.from({ length: 30 }, (_, i) => ({
+    // Reduce number of particles from 30 to 15
+    const newParticles = Array.from({ length: 15 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
@@ -22,7 +22,7 @@ export function AnimatedBackground() {
       {/* Base gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-purple-900/20" />
 
-      {/* Circuit board pattern */}
+      {/* Circuit board pattern - reduced animation complexity */}
       <motion.div
         className="absolute inset-0 opacity-10"
         style={{
@@ -36,13 +36,13 @@ export function AnimatedBackground() {
           backgroundPosition: ["0px 0px", "50px 50px"],
         }}
         transition={{
-          duration: 20,
+          duration: 30, // Increased duration for smoother animation
           repeat: Number.POSITIVE_INFINITY,
           ease: "linear",
         }}
       />
 
-      {/* Matrix rain effect */}
+      {/* Matrix rain effect - reduced number of particles */}
       <div className="absolute inset-0">
         {particles.map((particle) => (
           <motion.div
@@ -57,7 +57,7 @@ export function AnimatedBackground() {
               opacity: [0, 1, 1, 0],
             }}
             transition={{
-              duration: 8,
+              duration: 12, // Increased duration for smoother animation
               repeat: Number.POSITIVE_INFINITY,
               delay: particle.delay,
               ease: "linear",
@@ -66,7 +66,7 @@ export function AnimatedBackground() {
         ))}
       </div>
 
-      {/* Glowing orbs */}
+      {/* Single glowing orb instead of multiple */}
       <motion.div
         className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl"
         animate={{
@@ -74,22 +74,9 @@ export function AnimatedBackground() {
           opacity: [0.3, 0.6, 0.3],
         }}
         transition={{
-          duration: 4,
+          duration: 6, // Increased duration for smoother animation
           repeat: Number.POSITIVE_INFINITY,
           ease: "easeInOut",
-        }}
-      />
-      <motion.div
-        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
-        animate={{
-          scale: [1.2, 1, 1.2],
-          opacity: [0.6, 0.3, 0.6],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: "easeInOut",
-          delay: 2,
         }}
       />
     </div>
