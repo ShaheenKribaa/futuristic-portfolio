@@ -14,6 +14,7 @@ interface PageView {
     width: number
     height: number
   }
+  region?: string
 }
 
 interface AnalyticsEvent {
@@ -40,13 +41,16 @@ class Analytics {
   private heatmapData: HeatmapData[] = []
   private sessionStart: number
   private currentSessionId: string
+  private readonly STORAGE_KEYS = {
+    pageViews: 'analytics_pageViews',
+    events: 'analytics_events',
+    heatmapData: 'analytics_heatmapData'
+  }
 
   private constructor() {
     this.sessionStart = Date.now()
     this.currentSessionId = this.generateSessionId()
-    if (typeof window !== 'undefined') {
-      this.loadData()
-    }
+    this.loadData()
   }
 
   public static getInstance(): Analytics {
@@ -82,6 +86,60 @@ class Analytics {
     return { browser, os }
   }
 
+  private loadData() {
+    if (typeof window === 'undefined') return
+
+    try {
+      // Load page views
+      const pageViewsData = localStorage.getItem(this.STORAGE_KEYS.pageViews)
+      if (pageViewsData) {
+        this.pageViews = JSON.parse(pageViewsData)
+      }
+
+      // Load events
+      const eventsData = localStorage.getItem(this.STORAGE_KEYS.events)
+      if (eventsData) {
+        this.events = JSON.parse(eventsData)
+      }
+
+      // Load heatmap data
+      const heatmapData = localStorage.getItem(this.STORAGE_KEYS.heatmapData)
+      if (heatmapData) {
+        this.heatmapData = JSON.parse(heatmapData)
+      }
+    } catch (error) {
+      console.warn('Failed to load analytics data:', error)
+      // Reset data on error
+      this.pageViews = []
+      this.events = []
+      this.heatmapData = []
+      this.clearStorage()
+    }
+  }
+
+  private saveData() {
+    if (typeof window === 'undefined') return
+
+    try {
+      localStorage.setItem(this.STORAGE_KEYS.pageViews, JSON.stringify(this.pageViews))
+      localStorage.setItem(this.STORAGE_KEYS.events, JSON.stringify(this.events))
+      localStorage.setItem(this.STORAGE_KEYS.heatmapData, JSON.stringify(this.heatmapData))
+    } catch (error) {
+      console.warn('Failed to save analytics data:', error)
+      this.clearStorage()
+    }
+  }
+
+  private clearStorage() {
+    try {
+      Object.values(this.STORAGE_KEYS).forEach(key => {
+        localStorage.removeItem(key)
+      })
+    } catch (error) {
+      console.warn('Failed to clear analytics storage:', error)
+    }
+  }
+
   public async trackPageView(path: string) {
     const { browser, os } = this.getBrowserInfo()
     const pageView: PageView = {
@@ -101,17 +159,28 @@ class Analytics {
 
     // Try to get geolocation data
     try {
-      const response = await fetch("https://ipapi.co/json/")
+      const response = await fetch("https://ipinfo.io/json")
       const data = await response.json()
       pageView.ip = data.ip
-      pageView.country = data.country_name
+      pageView.country = data.country
       pageView.city = data.city
+      pageView.region = data.region
     } catch (error) {
-      console.error("Error fetching geolocation:", error)
+      console.warn("Error fetching geolocation:", error)
     }
 
-    this.pageViews.push(pageView)
-    this.saveData()
+    // Check for duplicate user in the last 30 minutes
+    const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000)
+    const isDuplicate = this.pageViews.some(view => 
+      view.ip === pageView.ip && 
+      view.timestamp > thirtyMinutesAgo &&
+      view.path === pageView.path
+    )
+
+    if (!isDuplicate) {
+      this.pageViews.push(pageView)
+      this.saveData()
+    }
   }
 
   public trackEvent(name: string, data: Record<string, any> = {}) {
@@ -137,24 +206,6 @@ class Analytics {
     }
     this.heatmapData.push(heatmapPoint)
     this.saveData()
-  }
-
-  private saveData() {
-    if (typeof window === 'undefined') return
-    localStorage.setItem('analytics_pageViews', JSON.stringify(this.pageViews))
-    localStorage.setItem('analytics_events', JSON.stringify(this.events))
-    localStorage.setItem('analytics_heatmapData', JSON.stringify(this.heatmapData))
-  }
-
-  private loadData() {
-    if (typeof window === 'undefined') return
-    const pageViews = localStorage.getItem('analytics_pageViews')
-    const events = localStorage.getItem('analytics_events')
-    const heatmapData = localStorage.getItem('analytics_heatmapData')
-
-    if (pageViews) this.pageViews = JSON.parse(pageViews)
-    if (events) this.events = JSON.parse(events)
-    if (heatmapData) this.heatmapData = JSON.parse(heatmapData)
   }
 
   private getDeviceType(userAgent: string): string {
@@ -206,40 +257,87 @@ class Analytics {
     return (singlePageVisits / this.pageViews.length) * 100
   }
 
-  private getReturningVisitors(): { unique: number; returning: number } {
-    const visitorSessions = new Map<string, number>()
-    this.pageViews.forEach((view) => {
-      const count = visitorSessions.get(view.sessionId) || 0
-      visitorSessions.set(view.sessionId, count + 1)
+  private getReturningVisitors() {
+    const uniqueIPs = new Set<string>()
+    const returningIPs = new Set<string>()
+    const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000)
+
+    this.pageViews.forEach(view => {
+      if (view.ip) {
+        if (view.timestamp > thirtyMinutesAgo) {
+          if (uniqueIPs.has(view.ip)) {
+            returningIPs.add(view.ip)
+          } else {
+            uniqueIPs.add(view.ip)
+          }
+        }
+      }
     })
 
-    let unique = 0
-    let returning = 0
-    visitorSessions.forEach((count) => {
-      if (count === 1) unique++
-      else returning++
-    })
-
-    return { unique, returning }
+    return {
+      unique: uniqueIPs.size,
+      returning: returningIPs.size
+    }
   }
 
   private getGeolocationData() {
-    const locations = this.pageViews.reduce((acc, view) => {
-      if (view.country) {
-        acc[view.country] = (acc[view.country] || 0) + 1
-      }
-      return acc
-    }, {} as Record<string, number>)
-
-    return Object.entries(locations).map(([country, count]) => ({
-      country,
-      visitors: count,
-    }))
+    const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000)
+    const recentViews = this.pageViews.filter(view => view.timestamp > thirtyMinutesAgo)
+    
+    return {
+      countries: Object.entries(
+        recentViews.reduce((acc, view) => {
+          if (view.country) {
+            acc[view.country] = (acc[view.country] || 0) + 1
+          }
+          return acc
+        }, {} as Record<string, number>)
+      ).map(([country, count]) => ({
+        country,
+        visitors: count
+      })),
+      cities: Object.entries(
+        recentViews.reduce((acc, view) => {
+          if (view.city) {
+            acc[view.city] = (acc[view.city] || 0) + 1
+          }
+          return acc
+        }, {} as Record<string, number>)
+      ).map(([city, count]) => ({
+        city,
+        visitors: count
+      }))
+    }
   }
 
   public getAnalyticsData() {
     const { unique, returning } = this.getReturningVisitors()
     const uniqueVisitors = unique + returning
+
+    // Get visitor details, deduplicating by IP address
+    const visitorDetails = Object.values(
+      this.pageViews
+        .filter(view => view.timestamp > Date.now() - (30 * 60 * 1000)) // Last 30 minutes
+        .reduce((acc, view) => {
+          // Only keep the most recent visit for each IP
+          if (!acc[view.ip || 'unknown'] || view.timestamp > acc[view.ip || 'unknown'].timestamp) {
+            acc[view.ip || 'unknown'] = {
+              ip: view.ip || 'Unknown',
+              country: view.country || 'Unknown',
+              city: view.city || 'Unknown',
+              browser: view.browser,
+              os: view.os,
+              deviceType: view.deviceType,
+              timestamp: new Date(view.timestamp).toLocaleString(),
+              path: view.path,
+              timestamp_ms: view.timestamp // Keep original timestamp for sorting
+            }
+          }
+          return acc
+        }, {} as Record<string, any>)
+    )
+      .sort((a, b) => b.timestamp_ms - a.timestamp_ms) // Sort by most recent
+      .map(({ timestamp_ms, ...visitor }) => visitor) // Remove temporary timestamp field
 
     const deviceTypes = Object.entries(
       this.pageViews.reduce((acc, view) => {
@@ -286,9 +384,7 @@ class Analytics {
       totalVisits: this.pageViews.length,
       uniqueVisitors,
       returningVisitors: returning,
-      averageTimeOnSite: this.getAverageTimeOnSite(),
-      bounceRate: this.getBounceRate(),
-      pageViews: this.pageViews.length,
+      visitorDetails,
       topPages,
       trafficSources,
       deviceTypes,

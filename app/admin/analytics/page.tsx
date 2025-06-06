@@ -25,9 +25,16 @@ interface AnalyticsData {
   totalVisits: number
   uniqueVisitors: number
   returningVisitors: number
-  averageTimeOnSite: string
-  bounceRate: number
-  pageViews: number
+  visitorDetails: {
+    ip: string
+    country: string
+    city: string
+    browser: string
+    os: string
+    deviceType: string
+    timestamp: string
+    path: string
+  }[]
   topPages: { path: string; views: number }[]
   trafficSources: { source: string; percentage: number }[]
   deviceTypes: { type: string; percentage: number }[]
@@ -52,9 +59,7 @@ export default function AnalyticsPage() {
     totalVisits: 0,
     uniqueVisitors: 0,
     returningVisitors: 0,
-    averageTimeOnSite: "0m",
-    bounceRate: 0,
-    pageViews: 0,
+    visitorDetails: [],
     topPages: [],
     trafficSources: [],
     deviceTypes: [],
@@ -320,8 +325,48 @@ export default function AnalyticsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-black/50 backdrop-blur-sm border border-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Recent Visitors</h3>
+          <div className="space-y-4 max-h-[400px] overflow-y-auto">
+            {analyticsData.visitorDetails.map((visitor, index) => (
+              <div key={index} className="bg-black/30 rounded-lg p-4">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-gray-400">IP:</span>
+                    <span className="text-white ml-2">{visitor.ip}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Location:</span>
+                    <span className="text-white ml-2">{visitor.city}, {visitor.country}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Browser:</span>
+                    <span className="text-white ml-2">{visitor.browser}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">OS:</span>
+                    <span className="text-white ml-2">{visitor.os}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Device:</span>
+                    <span className="text-white ml-2">{visitor.deviceType}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Time:</span>
+                    <span className="text-white ml-2">{visitor.timestamp}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-400">Page:</span>
+                    <span className="text-white ml-2">{visitor.path}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-black/50 backdrop-blur-sm border border-gray-800 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Visitor Locations</h3>
-          <div className="h-[300px]">
+          <div className="h-[400px]">
             <ComposableMap>
               <Geographies geography={geoUrl}>
                 {({ geographies }) =>
@@ -348,24 +393,24 @@ export default function AnalyticsPage() {
             </ComposableMap>
           </div>
         </div>
+      </div>
 
-        <div className="bg-black/50 backdrop-blur-sm border border-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Daily Visits</h3>
-          <div className="h-[200px] flex items-end space-x-2">
-            {analyticsData.dailyVisits.map((day) => (
-              <div key={day.date} className="flex-1 flex flex-col items-center">
-                <div
-                  className="w-full bg-cyan-400 rounded-t-lg transition-all duration-300"
-                  style={{
-                    height: `${(day.visits / Math.max(...analyticsData.dailyVisits.map(d => d.visits))) * 100}%`,
-                  }}
-                />
-                <span className="text-xs text-gray-400 mt-2">
-                  {new Date(day.date).toLocaleDateString("en-US", { weekday: "short" })}
-                </span>
-              </div>
-            ))}
-          </div>
+      <div className="bg-black/50 backdrop-blur-sm border border-gray-800 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Daily Visits</h3>
+        <div className="h-[200px] flex items-end space-x-2">
+          {analyticsData.dailyVisits.map((day) => (
+            <div key={day.date} className="flex-1 flex flex-col items-center">
+              <div
+                className="w-full bg-cyan-400 rounded-t-lg transition-all duration-300"
+                style={{
+                  height: `${(day.visits / Math.max(...analyticsData.dailyVisits.map(d => d.visits))) * 100}%`,
+                }}
+              />
+              <span className="text-xs text-gray-400 mt-2">
+                {new Date(day.date).toLocaleDateString("en-US", { weekday: "short" })}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
